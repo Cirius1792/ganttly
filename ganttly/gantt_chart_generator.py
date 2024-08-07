@@ -65,6 +65,7 @@ class GanttChartGenerator:
 
         sub_streams = df['Sub Stream'].unique()
         df = df.sort_values(by=['Sub Stream', 'Start Date'])
+
         fig = px.timeline(df,
                           x_start="Start Date",
                           x_end="End Date",
@@ -72,7 +73,10 @@ class GanttChartGenerator:
                           color="Activity Category",
                           title="Gantt Chart",
                           text="Activity",
-                          category_orders={"Sub Stream": df['Sub Stream']}
+                          category_orders={
+                              "Sub Stream": df['Sub Stream'],
+                              "Start Date": df['Start Date']
+                          }
                           )
         fig.update_yaxes(categoryorder="total ascending")
 
@@ -103,6 +107,23 @@ class GanttChartGenerator:
                     text=milestone['Activity'],
                     textposition='top center',
                     name='Milestone'
+                ))
+
+        # Extract milestones
+        milestones = df[df['Activity Type'] ==
+                        ActivityTypeEnum.DEPENDENCY.value]
+
+        # Add scatter plot for milestones
+        if not milestones.empty:
+            for _, milestone in milestones.iterrows():
+                fig.add_trace(go.Scatter(
+                    x=[milestone['Start Date']],
+                    y=[milestone['Activity']],
+                    mode='markers',
+                    marker=dict(symbol='diamond', size=12, color='blue'),
+                    text=milestone['Activity'],
+                    textposition='top center',
+                    name='Dependency'
                 ))
 
         fig.update_layout(xaxis_title="Date",
