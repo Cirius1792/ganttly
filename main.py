@@ -6,11 +6,11 @@ from ganttly.gantt_chart_generator import GanttChartGenerator
 
 
 def main():
-    # file_path = r'C:\Users\c.tecce\OneDrive - Reply\Documents - CORE-FFit New Price\Planning\WIP Piano Overall.xlsx'
-    # sheet = "Promozioni-Canoni"
+    file_path = r'C:\Users\c.tecce\Downloads\WIP Piano Overall.xlsx'
+    sheet = "Promozioni-Canoni"
 
-    file_path = r'./tests/resources/test_plan.xlsx'
-    sheet = "MyPlan"
+    # file_path = r'./tests/resources/test_plan.xlsx'
+    # sheet = "MyPlan"
     repository = ExcelRepository(file_path, sheet)
     service = ActivityService(repository)
 

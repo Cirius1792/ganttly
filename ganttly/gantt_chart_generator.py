@@ -1,10 +1,33 @@
 # gantt_chart_generator.py
 
+from dataclasses import dataclass
+from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 from ganttly.dto import ActivityDTO, ActivityTypeEnum
 from typing import List
+
+
+@dataclass
+class GantRowDTO:
+    sub_stream: str
+    activity: str
+    activity_category: str
+    activity_type: str
+    start_date: datetime
+    end_date: datetime
+
+
+def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
+    return GantRowDTO(
+        sub_stream=activity.sub_stream,
+        activity=f"{activity.sub_stream}-{activity.activity}-{activity.activity_category}",
+        activity_category=activity.activity_category,
+        activity_type=activity.activity_type.value,
+        start_date=activity.start_date,
+        end_date=activity.end_date
+    )
 
 
 class GanttChartGenerator:
@@ -30,32 +53,44 @@ class GanttChartGenerator:
 
     def draw_chart(self):
         self._validate_activities()
+
         df = pd.DataFrame([{
             'Sub Stream': activity.sub_stream,
-            'Activity': f"{activity.activity}-{activity.activity_category}",
+            'Activity': activity.activity,
             'Activity Category': activity.activity_category,
             'Activity Type': activity.activity_type,
             'Start Date': activity.start_date,
             'End Date': activity.end_date,
-            'Owner': activity.owner,
-            'State': activity.state,
-            'Notes': activity.notes
-        } for activity in self.activities])
+        } for activity in map(to_gantt_row, self.activities)])
 
+        sub_streams = df['Sub Stream'].unique()
+        df = df.sort_values(by=['Sub Stream', 'Start Date'])
         fig = px.timeline(df,
                           x_start="Start Date",
                           x_end="End Date",
                           y="Activity",
                           color="Activity Category",
                           title="Gantt Chart",
-                          text="Activity")
-        fig.update_yaxes(autorange="reversed")
-        fig.update_layout(xaxis_title="Date",
-                          yaxis_title="Sub Stream",
-                          showlegend=True)
+                          text="Activity",
+                          category_orders={"Sub Stream": df['Sub Stream']}
+                          )
+        fig.update_yaxes(categoryorder="total ascending")
+
+        # Add group labels for sub streams
+        for sub_stream in sub_streams:
+            sub_stream_activities = df[df['Sub Stream'] == sub_stream]
+            for _, row in sub_stream_activities.iterrows():
+                fig.add_trace(go.Scatter(
+                    x=[row['Start Date'], row['End Date']],
+                    y=[row['Activity'], row['Activity']],
+                    mode='lines',
+                    line=dict(color='rgba(0,0,0,0)'),
+                    showlegend=False
+                ))
 
         # Extract milestones
-        milestones = df[df['Activity Type'] == ActivityTypeEnum.MILESTONE]
+        milestones = df[df['Activity Type'] ==
+                        ActivityTypeEnum.MILESTONE.value]
 
         # Add scatter plot for milestones
         if not milestones.empty:
@@ -63,11 +98,14 @@ class GanttChartGenerator:
                 fig.add_trace(go.Scatter(
                     x=[milestone['Start Date']],
                     y=[milestone['Activity']],
-                    mode='markers+text',
+                    mode='markers',
                     marker=dict(symbol='star', size=12, color='red'),
                     text=milestone['Activity'],
                     textposition='top center',
                     name='Milestone'
                 ))
 
+        fig.update_layout(xaxis_title="Date",
+                          yaxis_title="Sub Stream",
+                          showlegend=True)
         fig.show()
