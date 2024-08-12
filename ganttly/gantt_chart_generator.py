@@ -13,6 +13,7 @@ from typing import List
 class GantRowDTO:
     sub_stream: str
     activity: str
+    activity_label:str
     activity_category: str
     activity_type: str
     start_date: datetime
@@ -22,7 +23,8 @@ class GantRowDTO:
 def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
     return GantRowDTO(
         sub_stream=activity.sub_stream,
-        activity=f"{activity.sub_stream}-{activity.activity}-{activity.activity_category}",
+        activity=f"{activity.sub_stream}-{activity.activity}",
+        activity_label=f"{activity.sub_stream}-{activity.activity}-{activity.activity_category}",
         activity_category=activity.activity_category,
         activity_type=activity.activity_type.value,
         start_date=activity.start_date,
@@ -64,8 +66,7 @@ class GanttChartGenerator:
         } for activity in map(to_gantt_row, self.activities)])
 
         sub_streams = df['Sub Stream'].unique()
-        df = df.sort_values(by=['Sub Stream', 'Start Date'])
-
+        df = df.sort_values(by=['Sub Stream', 'Start Date'], ascending=True)
         fig = px.timeline(df,
                           x_start="Start Date",
                           x_end="End Date",
@@ -79,6 +80,8 @@ class GanttChartGenerator:
                           }
                           )
         fig.update_yaxes(categoryorder="total ascending")
+        for shape in fig['data']:
+            shape['opacity'] = 0.75
 
         # Add group labels for sub streams
         for sub_stream in sub_streams:

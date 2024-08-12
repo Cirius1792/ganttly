@@ -1,6 +1,6 @@
 import pandas as pd
 from ganttly.dto import ActivityDTO, ActivityTypeEnum
-from typing import List
+from typing import List, Optional
 
 DATE_FORMAT = "%d-%b-%y"
 
@@ -10,9 +10,12 @@ class ExcelRepository:
         self.file_path = file_path
         self.sheet_name = sheet_name
 
-    def load_activities(self) -> List[ActivityDTO]:
+    def load_activities(self, sub_stream_filter: Optional[List[str]] = None) -> List[ActivityDTO]:
         df = pd.read_excel(self.file_path, sheet_name=self.sheet_name)
         activities = []
+
+        if sub_stream_filter:
+            df = df[df['Sub Stream'].isin(sub_stream_filter)]
 
         for _, row in df.iterrows():
             activity = ActivityDTO(

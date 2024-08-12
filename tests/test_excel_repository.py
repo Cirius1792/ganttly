@@ -5,7 +5,6 @@ import pandas as pd
 from unittest.mock import patch
 from ganttly.dto import ActivityTypeEnum
 from ganttly.excel_repository import ExcelRepository
-from datetime import datetime
 
 
 class TestExcelRepository(unittest.TestCase):
@@ -38,3 +37,27 @@ class TestExcelRepository(unittest.TestCase):
         self.assertEqual(activity.owner, "Owner1")
         self.assertEqual(activity.state, "State1")
         self.assertEqual(activity.notes, "Some notes")
+
+    @patch('ganttly.excel_repository.pd.read_excel')
+    def test_load_activities_with_sub_stream_filter(self, mock_read_excel):
+        mock_data = pd.DataFrame({
+            'Sub Stream': ["Stream1", "Stream2", "Stream3"],
+            'Activity': ["Activity1", "Activity2", "Activity3"],
+            'Activity Category': ["Category1", "Category2", "Category3"],
+            'Activity Type': ["Type1", "Type2", "Type3"],
+            'Start Date': ["2023-01-01", "2023-02-01", "2023-03-01"],
+            'End Date': ["2023-01-10", "2023-02-10", "2023-03-10"],
+            'Owner': ["Owner1", "Owner2", "Owner3"],
+            'State': ["State1", "State2", "State3"],
+            'Notes': ["Notes1", "Notes2", "Notes3"]
+        })
+        mock_read_excel.return_value = mock_data
+
+        repository = ExcelRepository(
+            "path_to_your_excel_file.xlsx", sheet_name="Sheet1")
+        activities = repository.load_activities(
+            sub_stream_filter=["Stream1", "Stream3"])
+
+        self.assertEqual(len(activities), 2)
+        self.assertEqual(activities[0].sub_stream, "Stream1")
+        self.assertEqual(activities[1].sub_stream, "Stream3")
