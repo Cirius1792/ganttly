@@ -5,7 +5,7 @@ from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-from ganttly.dto import ActivityDTO, ActivityTypeEnum
+from ganttly.dto import ActivityCategoryEnum, ActivityDTO, ActivityTypeEnum
 from typing import List
 
 
@@ -73,33 +73,25 @@ class GanttChartGenerator:
         sub_streams = df['Sub Stream'].unique()
         show_key = 'Activity Category' if self.by_category else 'Activity'
         df = df.sort_values(by=[show_key, 'Start Date'], ascending=True)
+        category_orders = {
+            "Sub Stream": df['Sub Stream'],
+            "Start Date": df['Start Date']
+        }
+        if self.by_category:
+            category_orders = {"Activity Category": [
+                e.value for e in ActivityCategoryEnum.get_ordered()]}
         fig = px.timeline(df,
                           x_start="Start Date",
                           x_end="End Date",
                           y=show_key,
                           color="Activity Category",
                           title=self.title,
-                          text="Activity",
-                          category_orders={
-                              "Sub Stream": df['Sub Stream'],
-                              "Start Date": df['Start Date']
-                          }
+                          # text="Activity",
+                          category_orders=category_orders
                           )
-        fig.update_yaxes(categoryorder="total ascending")
+        # fig.update_yaxes(categoryorder="total ascending")
         for shape in fig['data']:
             shape['opacity'] = 0.75
-
-        # Add group labels for sub streams
-        for sub_stream in sub_streams:
-            sub_stream_activities = df[df['Sub Stream'] == sub_stream]
-            for _, row in sub_stream_activities.iterrows():
-                fig.add_trace(go.Scatter(
-                    x=[row['Start Date'], row['End Date']],
-                    y=[row['Activity'], row['Activity']],
-                    mode='lines',
-                    line=dict(color='rgba(0,0,0,0)'),
-                    showlegend=False
-                ))
 
         # Extract milestones
         milestones = df[df['Activity Type'] ==
@@ -110,7 +102,7 @@ class GanttChartGenerator:
             for _, milestone in milestones.iterrows():
                 fig.add_trace(go.Scatter(
                     x=[milestone['Start Date']],
-                    y=[milestone['Activity']],
+                    y=[milestone[show_key]],
                     mode='markers',
                     marker=dict(symbol='star', size=12, color='red'),
                     text=milestone['Activity'],
@@ -119,18 +111,18 @@ class GanttChartGenerator:
                 ))
 
         # Extract milestones
-        milestones = df[df['Activity Type'] ==
-                        ActivityTypeEnum.DEPENDENCY.value]
+        dependencies = df[df['Activity Type'] ==
+                          ActivityTypeEnum.DEPENDENCY.value]
 
         # Add scatter plot for milestones
-        if not milestones.empty:
-            for _, milestone in milestones.iterrows():
+        if not dependencies.empty:
+            for _, dependency in dependencies.iterrows():
                 fig.add_trace(go.Scatter(
-                    x=[milestone['Start Date']],
-                    y=[milestone['Activity']],
+                    x=[dependency['Start Date']],
+                    y=[dependency[show_key]],
                     mode='markers',
                     marker=dict(symbol='diamond', size=12, color='blue'),
-                    text=milestone['Activity'],
+                    text=dependency['Activity'],
                     textposition='top center',
                     name='Dependency'
                 ))

@@ -19,7 +19,7 @@ def main():
                         help="List of sub-streams to filter activities by. If not provided, all sub-streams will be included.")
     parser.add_argument('--per-stream', '-ps', action='store_true',
                         help="Print a Gantt chart per sub-stream. Default is False.")
-    parser.add_argument('--group-per-activity', '-a', action='store_false',
+    parser.add_argument('--group-per-activity', '-a', action='store_true',
                         help="Make a separate bar in the chart for each activity")
     parser.add_argument('--output', type=str, default='gantt_charts.html',
                         help="Output HTML file to save the charts. Default is 'gantt_charts.html'.")
