@@ -13,7 +13,7 @@ from typing import List
 class GantRowDTO:
     sub_stream: str
     activity: str
-    activity_label:str
+    activity_label: str
     activity_category: str
     activity_type: str
     start_date: datetime
@@ -33,7 +33,8 @@ def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
 
 
 class GanttChartGenerator:
-    def __init__(self, activities: List[ActivityDTO]):
+    def __init__(self, activities: List[ActivityDTO], title="Gantt Chart"):
+        self.title = title
         self.activities = activities
 
     def _validate_activities(self):
@@ -53,7 +54,7 @@ class GanttChartGenerator:
                         raise ValueError(
                             f"Activity {activity.activity} is missing start_date")
 
-    def draw_chart(self):
+    def draw_chart(self) -> go.Figure:
         self._validate_activities()
 
         df = pd.DataFrame([{
@@ -72,7 +73,7 @@ class GanttChartGenerator:
                           x_end="End Date",
                           y="Activity",
                           color="Activity Category",
-                          title="Gantt Chart",
+                          title=self.title,
                           text="Activity",
                           category_orders={
                               "Sub Stream": df['Sub Stream'],
@@ -132,4 +133,5 @@ class GanttChartGenerator:
         fig.update_layout(xaxis_title="Date",
                           yaxis_title="Sub Stream",
                           showlegend=True)
-        fig.show()
+        # fig.show()
+        return fig

@@ -2,8 +2,10 @@
 
 from ganttly.excel_repository import ExcelRepository
 from ganttly.activity_service import ActivityService
+from ganttly.gantt_chart_aggregator import GanttChartAggregator
 from ganttly.gantt_chart_generator import GanttChartGenerator
 import argparse
+import webbrowser
 
 
 def main():
@@ -15,7 +17,10 @@ def main():
                         help="Name of the sheet in the Excel file to load data from. Default is 'Sheet1'.")
     parser.add_argument('--filter', type=str, nargs='*',
                         help="List of sub-streams to filter activities by. If not provided, all sub-streams will be included.")
-
+    parser.add_argument('--per-stream', '-ps', action='store_true',
+                        help="Print a Gantt chart per sub-stream. Default is False.")
+    parser.add_argument('--output', type=str, default='gantt_charts.html',
+                        help="Output HTML file to save the charts. Default is 'gantt_charts.html'.")
     args = parser.parse_args()
 
     # Initialize the repository with the given file path and sheet name
@@ -23,11 +28,25 @@ def main():
         file_path=args.file_path, sheet_name=args.sheet)
 
     service = ActivityService(repository)
+    figs = []
+    if args.filter:
+        activities = service.get_activities(args.filter)
+        chart_generator = GanttChartGenerator(activities)
+        fig = chart_generator.draw_chart()
+        figs.append(fig)
+    elif args.per_stream:
+        activities_by_stream = service.get_activities_by_stream()
+        for stream, activities in activities_by_stream.items():
+            chart_generator = GanttChartGenerator(activities, title=stream)
+            figs.append(chart_generator.draw_chart())
+    aggregator = GanttChartAggregator()
 
-    activities = service.get_activities(args.filter)
-    chart_generator = GanttChartGenerator(activities)
+    for fig in figs:
+        aggregator.add_chart(fig)
 
-    chart_generator.draw_chart()
+    aggregator.save_to_file(args.output)
+
+    webbrowser.open(args.output)
 
 
 if __name__ == "__main__":
