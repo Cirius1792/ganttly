@@ -33,9 +33,13 @@ def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
 
 
 class GanttChartGenerator:
-    def __init__(self, activities: List[ActivityDTO], title="Gantt Chart"):
+    def __init__(self, activities: List[ActivityDTO],
+                 title="Gantt Chart",
+                 by_category: bool = False):
         self.title = title
-        self.activities = activities
+        self.activities = [activity for activity in map(
+            to_gantt_row, activities)]
+        self.by_category = by_category
 
     def _validate_activities(self):
         """
@@ -64,14 +68,15 @@ class GanttChartGenerator:
             'Activity Type': activity.activity_type,
             'Start Date': activity.start_date,
             'End Date': activity.end_date,
-        } for activity in map(to_gantt_row, self.activities)])
+        } for activity in self.activities])
 
         sub_streams = df['Sub Stream'].unique()
-        df = df.sort_values(by=['Sub Stream', 'Start Date'], ascending=True)
+        show_key = 'Activity Category' if self.by_category else 'Activity'
+        df = df.sort_values(by=[show_key, 'Start Date'], ascending=True)
         fig = px.timeline(df,
                           x_start="Start Date",
                           x_end="End Date",
-                          y="Activity",
+                          y=show_key,
                           color="Activity Category",
                           title=self.title,
                           text="Activity",
