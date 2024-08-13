@@ -74,12 +74,10 @@ class GanttChartGenerator:
         show_key = 'Activity Category' if self.by_category else 'Activity'
         df = df.sort_values(by=[show_key, 'Start Date'], ascending=True)
         category_orders = {
-            "Sub Stream": df['Sub Stream'],
-            "Start Date": df['Start Date']
+            "Sub Stream": sub_streams,
+            "Activity Category": [
+                e.value for e in ActivityCategoryEnum.get_ordered()]
         }
-        if self.by_category:
-            category_orders = {"Activity Category": [
-                e.value for e in ActivityCategoryEnum.get_ordered()]}
         fig = px.timeline(df,
                           x_start="Start Date",
                           x_end="End Date",
