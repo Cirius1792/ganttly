@@ -1,5 +1,6 @@
 # gantt_chart_generator.py
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 import plotly.express as px
@@ -32,14 +33,15 @@ def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
     )
 
 
-class GanttChartGenerator:
+class GanttChartGenerator(ABC):
+
     def __init__(self, activities: List[ActivityDTO],
                  title="Gantt Chart",
-                 by_category: bool = False):
+                **kwargs
+                 ):
         self.title = title
         self.activities = [activity for activity in map(
             to_gantt_row, activities)]
-        self.by_category = by_category
 
     def _validate_activities(self):
         """
@@ -60,6 +62,34 @@ class GanttChartGenerator:
 
     def draw_chart(self) -> go.Figure:
         self._validate_activities()
+        return self._draw_chart()
+
+    @abstractmethod
+    def _draw_chart(self) -> go.Figure:
+        pass
+
+class GanttChartActivityGenerator(GanttChartGenerator):
+    def __init__(self, activities: List[ActivityDTO],
+                 title="Gantt Chart",
+                 by_category: bool = False):
+        super().__init__(activities, title)
+        self.by_category = by_category
+
+    def _add_depenencies(self, dependencies, show_key:str,name:str, marker_symbol:str, fig: go.Figure) -> go.Figure:
+        if not dependencies.empty:
+            for _, dependency in dependencies.iterrows():
+                fig.add_trace(go.Scatter(
+                    x=[dependency['Start Date']],
+                    y=[dependency[show_key]],
+                    mode='markers',
+                    marker=dict(symbol=marker_symbol, size=12, color='blue'),
+                    text=dependency['Activity'],
+                    textposition='top center',
+                    name=name
+                ))
+        return fig
+
+    def _draw_chart(self) -> go.Figure:
 
         df = pd.DataFrame([{
             'Sub Stream': activity.sub_stream,
@@ -96,37 +126,16 @@ class GanttChartGenerator:
                         ActivityTypeEnum.MILESTONE.value]
 
         # Add scatter plot for milestones
-        if not milestones.empty:
-            for _, milestone in milestones.iterrows():
-                fig.add_trace(go.Scatter(
-                    x=[milestone['Start Date']],
-                    y=[milestone[show_key]],
-                    mode='markers',
-                    marker=dict(symbol='star', size=12, color='red'),
-                    text=milestone['Activity'],
-                    textposition='top center',
-                    name='Milestone'
-                ))
+        self._add_depenencies(milestones, show_key, 'Milestone', 'star', fig)
 
-        # Extract milestones
+        # Extract dependencies
         dependencies = df[df['Activity Type'] ==
                           ActivityTypeEnum.DEPENDENCY.value]
 
         # Add scatter plot for milestones
-        if not dependencies.empty:
-            for _, dependency in dependencies.iterrows():
-                fig.add_trace(go.Scatter(
-                    x=[dependency['Start Date']],
-                    y=[dependency[show_key]],
-                    mode='markers',
-                    marker=dict(symbol='diamond', size=12, color='blue'),
-                    text=dependency['Activity'],
-                    textposition='top center',
-                    name='Dependency'
-                ))
+        self._add_depenencies(dependencies, show_key, 'Dependency', 'diamond', fig)
 
         fig.update_layout(xaxis_title="Date",
                           yaxis_title="Sub Stream",
                           showlegend=True)
-        # fig.show()
         return fig

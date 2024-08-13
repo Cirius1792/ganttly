@@ -3,7 +3,7 @@
 from ganttly.excel_repository import ExcelRepository
 from ganttly.activity_service import ActivityService
 from ganttly.gantt_chart_aggregator import GanttChartAggregator
-from ganttly.gantt_chart_generator import GanttChartGenerator
+from ganttly.gantt_chart_generator import GanttChartActivityGenerator
 import argparse
 import webbrowser
 
@@ -35,12 +35,12 @@ def main():
         if args.per_stream:
             activities_by_stream = service.get_activities_by_stream()
             for stream, activities in activities_by_stream.items():
-                chart_generator = GanttChartGenerator(
+                chart_generator = GanttChartActivityGenerator(
                     activities, title=stream, by_category=args.group_per_activity)
                 figs.append(chart_generator.draw_chart())
         else:
             activities = service.get_activities(args.filter)
-            chart_generator = GanttChartGenerator(
+            chart_generator = GanttChartActivityGenerator(
                 activities, by_category=args.group_per_activity)
             fig = chart_generator.draw_chart()
             figs.append(fig)
