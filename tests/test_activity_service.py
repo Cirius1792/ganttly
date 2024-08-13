@@ -57,3 +57,20 @@ class TestActivityService(unittest.TestCase):
 
         # Since we're testing the interaction, no need to assert on the returned activities,
         # as the mock is not returning actual data.
+    def test_get_activities_by_stream(self):
+        mock_repository = Mock()
+        stream_1 = "Stream1"
+        stream_2 = "Stream2"
+        mock_repository.load_activities.return_value = [
+            build_activity_dto(stream_1, "as1"),
+            build_activity_dto(stream_2, "as2")
+        ]
+        service = ActivityService(mock_repository)
+        activities_by_stream = service.get_activities_by_stream()
+        self.assertEqual(2, len(activities_by_stream))
+        self.assertEqual(1, len(activities_by_stream[stream_1]))
+        self.assertEqual(1, len(activities_by_stream[stream_2]))
+        self.assertEqual(
+            stream_1, activities_by_stream[stream_1][0].sub_stream)
+        self.assertEqual(
+            stream_2, activities_by_stream[stream_2][0].sub_stream)
