@@ -1,11 +1,12 @@
 # main.py
 
-from ganttly.excel_repository import ExcelRepository
-from ganttly.activity_service import ActivityService
-from ganttly.gantt_chart_aggregator import GanttChartAggregator
-from ganttly.gantt_chart_generator import GanttChartActivityGenerator
+from ganttly.gantly_command import GanttlyCommandFactory, GanttlyConfiguration
 import argparse
 import webbrowser
+
+
+def args_to_cofnig_mapper(args) -> GanttlyConfiguration:
+    return GanttlyConfiguration(args.group_per_activity, args.per_stream, args.output, args.sheet, args.filter)
 
 
 def main():
@@ -20,42 +21,29 @@ def main():
     parser.add_argument('--per-stream', '-ps', action='store_true',
                         help="Print a Gantt chart per sub-stream. Default is False.")
     parser.add_argument('--group-per-activity', '-a', action='store_true',
-                        help="Make a separate bar in the chart for each activity")
+                        help="""Make a separate bar in the chart for each activity. 
+                        The activities are: 
+                        - afu
+                        - ate
+                        - development
+                        - integration test
+                        - system_test
+                        - uat
+                        - release
+                        - post go live
+                        """)
     parser.add_argument('--output', type=str, default='gantt_charts.html',
                         help="Output HTML file to save the charts. Default is 'gantt_charts.html'.")
     args = parser.parse_args()
-
-    # Initialize the repository with the given file path and sheet name
-    repository = ExcelRepository(
-        file_path=args.file_path, sheet_name=args.sheet)
-
-    service = ActivityService(repository)
-    figs = []
+    config = args_to_cofnig_mapper(args)
+    command = GanttlyCommandFactory(args.file_path, config).create()
     try:
-        if args.per_stream:
-            activities_by_stream = service.get_activities_by_stream()
-            for stream, activities in activities_by_stream.items():
-                chart_generator = GanttChartActivityGenerator(
-                    activities, title=stream, by_category=args.group_per_activity)
-                figs.append(chart_generator.draw_chart())
-        else:
-            activities = service.get_activities(args.filter)
-            chart_generator = GanttChartActivityGenerator(
-                activities, by_category=args.group_per_activity)
-            fig = chart_generator.draw_chart()
-            figs.append(fig)
+        command.execute()
     except ValueError as e:
         print(f"Error: {e}")
         return
 
-    aggregator = GanttChartAggregator()
-
-    for fig in figs:
-        aggregator.add_chart(fig)
-
-    aggregator.save_to_file(args.output)
-
-    webbrowser.open(args.output)
+    webbrowser.open(config.output)
 
 
 if __name__ == "__main__":

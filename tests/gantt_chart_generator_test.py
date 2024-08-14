@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from ganttly.dto import ActivityTypeEnum
-from ganttly.gantt_chart_generator import GanttChartGenerator
+from ganttly.gantt_chart_generator import GanttChartActivityGenerator
 from tests.activity_dto_helper import build_activity_dto
 
 
@@ -14,7 +14,7 @@ class TestGanttChartGenerator(TestCase):
         activities = [
             activity
         ]
-        gcg = GanttChartGenerator(activities)
+        gcg = GanttChartActivityGenerator(activities)
         with self.assertRaises(ValueError):
             gcg.draw_chart()
 
@@ -25,7 +25,7 @@ class TestGanttChartGenerator(TestCase):
         activities = [
             activity
         ]
-        gcg = GanttChartGenerator(activities)
+        gcg = GanttChartActivityGenerator(activities)
         with self.assertRaises(ValueError):
             gcg.draw_chart()
 
@@ -36,6 +36,6 @@ class TestGanttChartGenerator(TestCase):
         activities = [
             activity
         ]
-        gcg = GanttChartGenerator(activities)
+        gcg = GanttChartActivityGenerator(activities)
         with self.assertRaises(ValueError):
             gcg.draw_chart()

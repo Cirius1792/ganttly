@@ -15,7 +15,7 @@ class ExcelRepository:
         'End Date',
     ]
 
-    def __init__(self, file_path: str, sheet_name: str):
+    def __init__(self, file_path: str, sheet_name: str="Sheet1"):
         self.file_path = file_path
         self.sheet_name = sheet_name
 
