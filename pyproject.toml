@@ -1,17 +1,21 @@
 [tool.poetry]
 name = "ganttly"
-version = "0.1.0"
+version = "0.0.2"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 packages = [
     {include="ganttly"}
 ]
+
+[tool.poetry.scripts]
+ganttly = "ganttly.cli:cli"
 [tool.poetry.dependencies]
 python = "^3.11"
 plotly = "^5.23.0"
 pandas = "^2.2.2"
 openpyxl = "^3.1.5"
+click = "^8.1.7"
 
 
 [tool.poetry.group.test.dependencies]

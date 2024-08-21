@@ -32,6 +32,9 @@ class GanttlyCommand(ABC):
 
 
 class CreateActivityGanttCommand(GanttlyCommand):
+    """ Creates a gantt chart where the activities are groupped by type. 
+    For example, all the tasks of type "developmentE are grouped together
+    """
 
     def execute(self):
         activities = self.service.get_activities(self.config.filter)
@@ -42,6 +45,9 @@ class CreateActivityGanttCommand(GanttlyCommand):
 
 
 class CreateSubStreamGanttCommand(GanttlyCommand):
+    """ Creates a series of gantt chart where the activities are grouped by substream.
+    Therefore a gantt per substream is created"""
+
     def execute(self):
         activities_by_stream = self.service.get_activities_by_stream()
         figs = []
@@ -55,6 +61,10 @@ class CreateSubStreamGanttCommand(GanttlyCommand):
         self.aggregator.save_to_file(self.config.output)
 
 class CreateSubStreamPerActivityGanttCommand(GanttlyCommand):
+    """ Creates a series of gantt chart where the activities are grouped by substream.
+    The activities are groupped by type.
+
+    Therefore a gantt per substream is created and all the tasks of the same category are groupped"""
     def execute(self):
         activities_by_stream = self.service.get_activities_by_stream()
         figs = []
@@ -68,6 +78,7 @@ class CreateSubStreamPerActivityGanttCommand(GanttlyCommand):
         self.aggregator.save_to_file(self.config.output)
 
 class CreateGanttCommand(GanttlyCommand):
+    """ Creates a gantt chart."""
     def execute(self):
         activities = self.service.get_activities(self.config.filter)
         chart_generator = GanttChartSubStreamGenerator(activities)
@@ -82,6 +93,7 @@ class GanttlyCommandFactory:
         self.config = config
 
     def create(self) -> GanttlyCommand:
+        """ Translates the configuration into a command"""
         if self.config.per_stream and not self.config.group_per_activity:
             return CreateSubStreamGanttCommand(self.file_path, self.config)
         if self.config.per_stream and self.config.group_per_activity:
