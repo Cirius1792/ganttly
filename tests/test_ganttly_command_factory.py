@@ -11,7 +11,7 @@ class TestCopilotCommandFactory(TestCase):
         (GanttlyConfiguration(), CreateGanttCommand),
         (GanttlyConfiguration(per_stream=True), CreateSubStreamGanttCommand),
         (GanttlyConfiguration(group_per_activity=True), CreateActivityGanttCommand),
-        (GanttlyConfiguration(per_stream=True, group_per_activity=True), CreateActivityGanttCommand),
+        (GanttlyConfiguration(per_stream=True, group_per_activity=True), CreateSubStreamPerActivityGanttCommand),
         ])
     def test_create_command(self, configuration, expected_command):
         command_factory = GanttlyCommandFactory("file_path", configuration)

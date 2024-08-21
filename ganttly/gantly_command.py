@@ -54,6 +54,18 @@ class CreateSubStreamGanttCommand(GanttlyCommand):
             self.aggregator.add_chart(fig)
         self.aggregator.save_to_file(self.config.output)
 
+class CreateSubStreamPerActivityGanttCommand(GanttlyCommand):
+    def execute(self):
+        activities_by_stream = self.service.get_activities_by_stream()
+        figs = []
+        for stream, activities in activities_by_stream.items():
+            chart_generator = GanttChartActivityGenerator(
+                activities, title=stream)
+            figs.append(chart_generator.draw_chart())
+
+        for fig in figs:
+            self.aggregator.add_chart(fig)
+        self.aggregator.save_to_file(self.config.output)
 
 class CreateGanttCommand(GanttlyCommand):
     def execute(self):
@@ -70,8 +82,10 @@ class GanttlyCommandFactory:
         self.config = config
 
     def create(self) -> GanttlyCommand:
+        if self.config.per_stream and not self.config.group_per_activity:
+            return CreateSubStreamGanttCommand(self.file_path, self.config)
+        if self.config.per_stream and self.config.group_per_activity:
+            return CreateSubStreamPerActivityGanttCommand(self.file_path, self.config)
         if self.config.group_per_activity:
             return CreateActivityGanttCommand(self.file_path, self.config)
-        if self.config.per_stream:
-            return CreateSubStreamGanttCommand(self.file_path, self.config)
         return CreateGanttCommand(self.file_path, self.config)
