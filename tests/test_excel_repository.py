@@ -3,7 +3,7 @@
 import unittest
 import pandas as pd
 from unittest.mock import patch
-from ganttly.dto import ActivityTypeEnum
+from ganttly.dto import ActivityCategoryEnum, ActivityTypeEnum
 from ganttly.excel_repository import ExcelRepository
 
 
@@ -13,7 +13,7 @@ class TestExcelRepository(unittest.TestCase):
         mock_data = {
             'Sub Stream': ['Stream1'],
             'Activity': ['Activity1'],
-            'Activity Category': ['Category1'],
+            'Activity Category': ["Integration Test"],
             'Activity Type': ['Task'],
             'Start Date': ['2023-01-01'],
             'End Date': ['2023-01-10'],
@@ -30,7 +30,7 @@ class TestExcelRepository(unittest.TestCase):
         activity = activities[0]
         self.assertEqual(activity.sub_stream, "Stream1")
         self.assertEqual(activity.activity, "Activity1")
-        self.assertEqual(activity.activity_category, "Category1")
+        self.assertEqual(activity.activity_category, ActivityCategoryEnum.INTEGRATION_TEST)
         self.assertEqual(activity.activity_type, ActivityTypeEnum.TASK)
         # self.assertEqual(activity.start_date, datetime(2023, 1, 1).date())
         # self.assertEqual(activity.end_date, datetime(2023, 1, 10).date())

@@ -23,34 +23,41 @@ class ActivityTypeEnum(Enum):
 
 
 class ActivityCategoryEnum(Enum):
-    afu = "AFU"
-    ate = "ATE"
-    development = "Sviluppi"
-    integration_test = "Integration Test"
-    system_test = "System Test"
-    uat = "UAT"
-    release = "Rilascio in produzione"
-    post_go_live = "Post Go Live"
+    AFU = "AFU"
+    ATE = "ATE"
+    DEVELOPMENT = "Sviluppi"
+    INTEGRATION_TEST = "Integration Test"
+    SYSTEM_TEST = "System Test"
+    UAT = "UAT"
+    RELEASE = "Rilascio in produzione"
+    POST_GO_LIVE = "Post Go Live"
+    UNKNOWN = "N/A"
 
     @staticmethod
     def get_ordered() -> List['ActivityCategoryEnum']:
         return [
-            ActivityCategoryEnum.afu,
-            ActivityCategoryEnum.ate,
-            ActivityCategoryEnum.development,
-            ActivityCategoryEnum.integration_test,
-            ActivityCategoryEnum.system_test,
-            ActivityCategoryEnum.uat,
-            ActivityCategoryEnum.release,
-            ActivityCategoryEnum.post_go_live,
+            ActivityCategoryEnum.AFU,
+            ActivityCategoryEnum.ATE,
+            ActivityCategoryEnum.DEVELOPMENT,
+            ActivityCategoryEnum.INTEGRATION_TEST,
+            ActivityCategoryEnum.SYSTEM_TEST,
+            ActivityCategoryEnum.UAT,
+            ActivityCategoryEnum.RELEASE,
+            ActivityCategoryEnum.POST_GO_LIVE,
         ]
 
+    @staticmethod
+    def from_string(value: str) -> 'ActivityCategoryEnum':
+        for item in ActivityCategoryEnum:
+            if item.value == value:
+                return item
+        return ActivityCategoryEnum.UNKNOWN
 
 @dataclass
 class ActivityDTO:
     sub_stream: str
     activity: str
-    activity_category: str
+    activity_category: ActivityCategoryEnum
     activity_type: ActivityTypeEnum
     start_date: datetime
     end_date: datetime

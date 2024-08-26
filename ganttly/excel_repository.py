@@ -1,5 +1,5 @@
 import pandas as pd
-from ganttly.dto import ActivityDTO, ActivityTypeEnum
+from ganttly.dto import ActivityCategoryEnum, ActivityDTO, ActivityTypeEnum
 from typing import List, Optional
 
 DATE_FORMAT = "%d-%b-%y"
@@ -39,7 +39,7 @@ class ExcelRepository:
             activity = ActivityDTO(
                 sub_stream=row['Sub Stream'],
                 activity=row['Activity'],
-                activity_category=row['Activity Category'],
+                activity_category=ActivityCategoryEnum.from_string(row['Activity Category']),
                 activity_type=ActivityTypeEnum.from_string(
                     row['Activity Type']),
                 start_date=row['Start Date'],

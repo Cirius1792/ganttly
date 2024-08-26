@@ -26,7 +26,7 @@ def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
         sub_stream=activity.sub_stream,
         activity=f"{activity.sub_stream}-{activity.activity}",
         activity_label=f"{activity.sub_stream}-{activity.activity}-{activity.activity_category}",
-        activity_category=activity.activity_category,
+        activity_category=activity.activity_category.value,
         activity_type=activity.activity_type.value,
         start_date=activity.start_date,
         end_date=activity.end_date
@@ -158,11 +158,13 @@ class GanttChartActivityGenerator(GanttChartGenerator):
 
         sub_streams = df['Sub Stream'].unique()
         show_key = 'Activity Category' 
+        actual_activities = { e.activity_category for e in self.activities }
         df = df.sort_values(by=[show_key, 'Start Date'], ascending=True)
+        print(f"Queste sono le categorie che ho trovato: {actual_activities}")
         category_orders = {
             "Sub Stream": sub_streams,
             "Activity Category": [
-                e.value for e in ActivityCategoryEnum.get_ordered()]
+                e.value for e in ActivityCategoryEnum.get_ordered() if e in actual_activities]
         }
         fig = px.timeline(df,
                           x_start="Start Date",
