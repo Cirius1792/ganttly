@@ -7,7 +7,19 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 from ganttly.dto import ActivityCategoryEnum, ActivityDTO, ActivityTypeEnum
-from typing import List
+from typing import List, Dict
+
+MILESTONE_SYMBOL = 'diamond'
+DEPENDENCY_SYMBOL = 'diamond-wide'
+COLOR_MAPPING = {
+    ActivityCategoryEnum.AFU.value: '#c1ffc6',  # green
+    ActivityCategoryEnum.ATE.value: '#7ac493',  # green
+    ActivityCategoryEnum.DEVELOPMENT.value: '#b1d6ff',  # light blue
+    ActivityCategoryEnum.INTEGRATION_TEST.value: '#bbbbbb',  # grey
+    ActivityCategoryEnum.SYSTEM_TEST.value: '#e2a6b6',  # rose
+    ActivityCategoryEnum.UAT.value: '#bd92de',  # violet
+    ActivityCategoryEnum.RELEASE.value: '#ff7e79'  # light rose
+}
 
 
 @dataclass
@@ -21,6 +33,10 @@ class GantRowDTO:
     end_date: datetime
 
 
+def color_from_activity_category() -> Dict[str, str]:
+    return COLOR_MAPPING
+
+
 def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
     return GantRowDTO(
         sub_stream=activity.sub_stream,
@@ -29,18 +45,25 @@ def to_gantt_row(activity: ActivityDTO) -> GantRowDTO:
         activity_category=activity.activity_category.value,
         activity_type=activity.activity_type.value,
         start_date=activity.start_date,
-        end_date=activity.end_date
+        end_date=activity.end_date,
     )
 
 
 class GanttChartGenerator(ABC):
 
+    AXIS_TEXT_SIZE = 22
+    LABEL_TEXT_SIZE = 28
+
     def __init__(self, activities: List[ActivityDTO],
                  title="Gantt Chart",
-                **kwargs
+                 show_title=True,
+                 show_legend=True,
+                 **kwargs
                  ):
-        self.title = title
+        self.title = title if show_title else None
+        self.show_title = show_title
         self.activities = activities
+        self.show_legend = show_legend
 
     def _validate_activities(self):
         """
@@ -59,27 +82,41 @@ class GanttChartGenerator(ABC):
                         raise ValueError(
                             f"Activity {activity.activity} is missing start_date")
 
-    def _add_depenencies(self, dependencies, show_key:str,name:str, marker_symbol:str, fig: go.Figure) -> go.Figure:
+    def _add_depenencies(self, dependencies, show_key: str, marker_symbol: str, fig: go.Figure) -> go.Figure:
         if not dependencies.empty:
             for _, dependency in dependencies.iterrows():
                 fig.add_trace(go.Scatter(
                     x=[dependency['Start Date']],
                     y=[dependency[show_key]],
                     mode='markers',
-                    marker=dict(symbol=marker_symbol, size=12, color='blue'),
+                    marker=dict(
+                        symbol=marker_symbol, size=GanttChartGenerator.LABEL_TEXT_SIZE, color='blue'),
                     text=dependency['Activity'],
                     textposition='top center',
-                    name=name
+                    name=dependency['Activity Category']
                 ))
         return fig
 
     def draw_chart(self) -> go.Figure:
         self._validate_activities()
-        return self._draw_chart()
+        fig = self._draw_chart()
+        fig.update_yaxes(
+            title_font=dict(size=GanttChartGenerator.AXIS_TEXT_SIZE),
+        )
+        fig.update_xaxes(
+            title_font=dict(size=GanttChartGenerator.AXIS_TEXT_SIZE),
+        )
+        fig.update_layout(
+            font=dict(
+                size=GanttChartGenerator.LABEL_TEXT_SIZE,  # Set the font size here
+            )
+        )
+        return fig
 
     @abstractmethod
     def _draw_chart(self) -> go.Figure:
         pass
+
 
 class GanttChartSubStreamGenerator(GanttChartGenerator):
     def __init__(self, activities: List[ActivityDTO],
@@ -112,38 +149,39 @@ class GanttChartSubStreamGenerator(GanttChartGenerator):
                           x_end="End Date",
                           y=show_key,
                           color="Activity Category",
-                          title=self.title,
+                          # title=self.title,
                           text="Activity",
-                          category_orders=category_orders
+                          category_orders=category_orders,
+                          color_discrete_map=color_from_activity_category()
                           )
         for shape in fig['data']:
-            shape['opacity'] = 0.75
+            shape['opacity'] = 0.85
 
         # Extract milestones
         milestones = df[df['Activity Type'] ==
                         ActivityTypeEnum.MILESTONE.value]
 
         # Add scatter plot for milestones
-        self._add_depenencies(milestones, show_key, 'Milestone', 'star', fig)
+        self._add_depenencies(milestones, show_key, MILESTONE_SYMBOL, fig)
 
         # Extract dependencies
         dependencies = df[df['Activity Type'] ==
                           ActivityTypeEnum.DEPENDENCY.value]
 
         # Add scatter plot for milestones
-        self._add_depenencies(dependencies, show_key, 'Dependency', 'diamond', fig)
+        self._add_depenencies(dependencies, show_key, DEPENDENCY_SYMBOL, fig)
 
         fig.update_layout(xaxis_title="Date",
                           yaxis_title="Sub Stream",
                           showlegend=True)
         return fig
 
+
 class GanttChartActivityGenerator(GanttChartGenerator):
     def __init__(self, activities: List[ActivityDTO],
                  title="Gantt Chart",
                  ):
         super().__init__(activities, title)
-
 
     def _draw_chart(self) -> go.Figure:
 
@@ -157,10 +195,9 @@ class GanttChartActivityGenerator(GanttChartGenerator):
         } for activity in map(to_gantt_row, self.activities)])
 
         sub_streams = df['Sub Stream'].unique()
-        show_key = 'Activity Category' 
-        actual_activities = { e.activity_category for e in self.activities }
+        show_key = 'Activity Category'
+        actual_activities = {e.activity_category for e in self.activities}
         df = df.sort_values(by=[show_key, 'Start Date'], ascending=True)
-        print(f"Queste sono le categorie che ho trovato: {actual_activities}")
         category_orders = {
             "Sub Stream": sub_streams,
             "Activity Category": [
@@ -171,26 +208,25 @@ class GanttChartActivityGenerator(GanttChartGenerator):
                           x_end="End Date",
                           y=show_key,
                           color="Activity Category",
-                          title=self.title,
+                          # title=self.title,
                           # text="Activity",
-                          category_orders=category_orders
+                          category_orders=category_orders,
+                          color_discrete_map=color_from_activity_category()
                           )
-        for shape in fig['data']:
-            shape['opacity'] = 0.75
 
         # Extract milestones
         milestones = df[df['Activity Type'] ==
                         ActivityTypeEnum.MILESTONE.value]
 
         # Add scatter plot for milestones
-        self._add_depenencies(milestones, show_key, 'Milestone', 'star', fig)
+        self._add_depenencies(milestones, show_key, MILESTONE_SYMBOL, fig)
 
         # Extract dependencies
         dependencies = df[df['Activity Type'] ==
                           ActivityTypeEnum.DEPENDENCY.value]
 
         # Add scatter plot for milestones
-        self._add_depenencies(dependencies, show_key, 'Dependency', 'diamond', fig)
+        self._add_depenencies(dependencies, show_key, DEPENDENCY_SYMBOL, fig)
 
         fig.update_layout(xaxis_title="Date",
                           yaxis_title="Activity",

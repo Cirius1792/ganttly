@@ -30,7 +30,6 @@ class ActivityCategoryEnum(Enum):
     SYSTEM_TEST = "System Test"
     UAT = "UAT"
     RELEASE = "Rilascio in produzione"
-    POST_GO_LIVE = "Post Go Live"
     UNKNOWN = "N/A"
 
     @staticmethod
@@ -43,7 +42,6 @@ class ActivityCategoryEnum(Enum):
             ActivityCategoryEnum.SYSTEM_TEST,
             ActivityCategoryEnum.UAT,
             ActivityCategoryEnum.RELEASE,
-            ActivityCategoryEnum.POST_GO_LIVE,
         ]
 
     @staticmethod
@@ -52,6 +50,7 @@ class ActivityCategoryEnum(Enum):
             if item.value == value:
                 return item
         return ActivityCategoryEnum.UNKNOWN
+
 
 @dataclass
 class ActivityDTO:
