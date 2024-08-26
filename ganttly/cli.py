@@ -32,7 +32,8 @@ def args_to_config_mapper(group_per_activity, per_stream, output, sheet, filter)
 @click.option('--output', type=str, default='gantt_charts.html',
               help="Output HTML file to save the charts. Default is 'gantt_charts.html'.")
 def cli(file_path, sheet, filter, per_stream, group_per_activity, output):
-    config = args_to_config_mapper(group_per_activity, per_stream, output, sheet, filter)
+    config = args_to_config_mapper(
+        group_per_activity, per_stream, output, sheet, filter)
     command = GanttlyCommandFactory(file_path, config).create()
     try:
         command.execute()
@@ -41,6 +42,7 @@ def cli(file_path, sheet, filter, per_stream, group_per_activity, output):
         return
 
     webbrowser.open(config.output)
+
 
 if __name__ == "__main__":
     cli()

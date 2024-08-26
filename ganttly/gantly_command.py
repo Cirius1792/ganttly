@@ -49,7 +49,8 @@ class CreateSubStreamGanttCommand(GanttlyCommand):
     Therefore a gantt per substream is created"""
 
     def execute(self):
-        activities_by_stream = self.service.get_activities_by_stream()
+        activities_by_stream = self.service.get_activities_by_stream(
+            self.config.filter)
         figs = []
         for stream, activities in activities_by_stream.items():
             chart_generator = GanttChartSubStreamGenerator(
@@ -60,13 +61,16 @@ class CreateSubStreamGanttCommand(GanttlyCommand):
             self.aggregator.add_chart(fig)
         self.aggregator.save_to_file(self.config.output)
 
+
 class CreateSubStreamPerActivityGanttCommand(GanttlyCommand):
     """ Creates a series of gantt chart where the activities are grouped by substream.
     The activities are groupped by type.
 
     Therefore a gantt per substream is created and all the tasks of the same category are groupped"""
+
     def execute(self):
-        activities_by_stream = self.service.get_activities_by_stream()
+        activities_by_stream = self.service.get_activities_by_stream(
+            self.config.filter)
         figs = []
         for stream, activities in activities_by_stream.items():
             chart_generator = GanttChartActivityGenerator(
@@ -77,8 +81,10 @@ class CreateSubStreamPerActivityGanttCommand(GanttlyCommand):
             self.aggregator.add_chart(fig)
         self.aggregator.save_to_file(self.config.output)
 
+
 class CreateGanttCommand(GanttlyCommand):
     """ Creates a gantt chart."""
+
     def execute(self):
         activities = self.service.get_activities(self.config.filter)
         chart_generator = GanttChartSubStreamGenerator(activities)
