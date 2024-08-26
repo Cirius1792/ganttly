@@ -15,6 +15,8 @@ class GanttlyConfiguration:
     output: str = "gantt_charts.html"
     sheet: str = "Sheet1"
     filter: List[str] = field(default_factory=list)
+    hide_legend: bool = False
+    hide_title: bool = False
 
 
 class GanttlyCommand(ABC):
@@ -38,7 +40,9 @@ class CreateActivityGanttCommand(GanttlyCommand):
 
     def execute(self):
         activities = self.service.get_activities(self.config.filter)
-        chart_generator = GanttChartActivityGenerator(activities)
+        chart_generator = GanttChartActivityGenerator(activities,
+                                                      hide_title=self.config.hide_title,
+                                                      hide_legend=self.config.hide_legend)
         fig = chart_generator.draw_chart()
         self.aggregator.add_chart(fig)
         self.aggregator.save_to_file(self.config.output)
@@ -54,7 +58,9 @@ class CreateSubStreamGanttCommand(GanttlyCommand):
         figs = []
         for stream, activities in activities_by_stream.items():
             chart_generator = GanttChartSubStreamGenerator(
-                activities, title=stream)
+                activities, title=stream,
+                hide_title=self.config.hide_title,
+                hide_legend=self.config.hide_legend)
             figs.append(chart_generator.draw_chart())
 
         for fig in figs:
@@ -74,7 +80,11 @@ class CreateSubStreamPerActivityGanttCommand(GanttlyCommand):
         figs = []
         for stream, activities in activities_by_stream.items():
             chart_generator = GanttChartActivityGenerator(
-                activities, title=stream)
+                activities,
+                title=stream,
+                hide_title=self.config.hide_title,
+                hide_legend=self.config.hide_legend
+            )
             figs.append(chart_generator.draw_chart())
 
         for fig in figs:
@@ -87,7 +97,8 @@ class CreateGanttCommand(GanttlyCommand):
 
     def execute(self):
         activities = self.service.get_activities(self.config.filter)
-        chart_generator = GanttChartSubStreamGenerator(activities)
+        chart_generator = GanttChartSubStreamGenerator(
+            activities, hide_legend=self.config.hide_legend)
         fig = chart_generator.draw_chart()
         self.aggregator.add_chart(fig)
         self.aggregator.save_to_file(self.config.output)

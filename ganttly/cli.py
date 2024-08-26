@@ -5,8 +5,24 @@ import click
 import webbrowser
 
 
-def args_to_config_mapper(group_per_activity, per_stream, output, sheet, filter) -> GanttlyConfiguration:
-    return GanttlyConfiguration(group_per_activity, per_stream, output, sheet, filter)
+def args_to_config_mapper(
+    group_per_activity,
+    per_stream,
+    output,
+    sheet,
+    filter,
+    hide_legend,
+    hide_title,
+) -> GanttlyConfiguration:
+    return GanttlyConfiguration(
+        group_per_activity=group_per_activity,
+        per_stream=per_stream,
+        output=output,
+        sheet=sheet,
+        filter=filter,
+        hide_legend=hide_legend,
+        hide_title=hide_title,
+    )
 
 
 @click.command()
@@ -17,6 +33,10 @@ def args_to_config_mapper(group_per_activity, per_stream, output, sheet, filter)
               help="List of sub-streams to filter activities by. If not provided, all sub-streams will be included.")
 @click.option('--per-stream', '-ps', is_flag=True,
               help="Print a Gantt chart per sub-stream. Default is False.")
+@click.option('--hide-legend', '-l', is_flag=True, default=False,
+              help="Enable or disable legend. Default is True.")
+@click.option('--hide-title', '-t', is_flag=True, default=False,
+              help="Enable or disable gantt graph title. Default is True.")
 @click.option('--group-per-activity', '-a', is_flag=True,
               help="""Make a separate bar in the chart for each activity. 
               The activities are: 
@@ -31,9 +51,16 @@ def args_to_config_mapper(group_per_activity, per_stream, output, sheet, filter)
               """)
 @click.option('--output', type=str, default='gantt_charts.html',
               help="Output HTML file to save the charts. Default is 'gantt_charts.html'.")
-def cli(file_path, sheet, filter, per_stream, group_per_activity, output):
+def cli(file_path, sheet, filter, per_stream, hide_legend, hide_title, group_per_activity, output):
     config = args_to_config_mapper(
-        group_per_activity, per_stream, output, sheet, filter)
+        group_per_activity=group_per_activity,
+        per_stream=per_stream,
+        output=output,
+        sheet=sheet,
+        filter=filter,
+        hide_legend=hide_legend,
+        hide_title=hide_title,
+    )
     command = GanttlyCommandFactory(file_path, config).create()
     try:
         command.execute()

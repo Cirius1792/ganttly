@@ -56,14 +56,14 @@ class GanttChartGenerator(ABC):
 
     def __init__(self, activities: List[ActivityDTO],
                  title="Gantt Chart",
-                 show_title=True,
-                 show_legend=True,
+                 hide_title=False,
+                 hide_legend=False,
                  **kwargs
                  ):
-        self.title = title if show_title else None
-        self.show_title = show_title
+        self.title = title if not hide_title else None
+        self.hide_title = hide_title
         self.activities = activities
-        self.show_legend = show_legend
+        self.hide_legend = hide_legend
 
     def _validate_activities(self):
         """
@@ -82,7 +82,7 @@ class GanttChartGenerator(ABC):
                         raise ValueError(
                             f"Activity {activity.activity} is missing start_date")
 
-    def _add_depenencies(self, dependencies, show_key: str, marker_symbol: str, fig: go.Figure) -> go.Figure:
+    def _add_depenencies(self, dependencies, show_key: str, marker_symbol: str, fig: go.Figure, numerate=False) -> go.Figure:
         if not dependencies.empty:
             for _, dependency in dependencies.iterrows():
                 fig.add_trace(go.Scatter(
@@ -121,8 +121,9 @@ class GanttChartGenerator(ABC):
 class GanttChartSubStreamGenerator(GanttChartGenerator):
     def __init__(self, activities: List[ActivityDTO],
                  title="Gantt Chart",
+                 **kwargs
                  ):
-        super().__init__(activities, title)
+        super().__init__(activities, title, **kwargs)
 
     def _draw_chart(self) -> go.Figure:
 
@@ -149,7 +150,7 @@ class GanttChartSubStreamGenerator(GanttChartGenerator):
                           x_end="End Date",
                           y=show_key,
                           color="Activity Category",
-                          # title=self.title,
+                          title=self.title,
                           text="Activity",
                           category_orders=category_orders,
                           color_discrete_map=color_from_activity_category()
@@ -173,15 +174,16 @@ class GanttChartSubStreamGenerator(GanttChartGenerator):
 
         fig.update_layout(xaxis_title="Date",
                           yaxis_title="Sub Stream",
-                          showlegend=True)
+                          showlegend=not self.hide_legend)
         return fig
 
 
 class GanttChartActivityGenerator(GanttChartGenerator):
     def __init__(self, activities: List[ActivityDTO],
                  title="Gantt Chart",
+                 **kwargs
                  ):
-        super().__init__(activities, title)
+        super().__init__(activities, title, **kwargs)
 
     def _draw_chart(self) -> go.Figure:
 
@@ -208,7 +210,7 @@ class GanttChartActivityGenerator(GanttChartGenerator):
                           x_end="End Date",
                           y=show_key,
                           color="Activity Category",
-                          # title=self.title,
+                          title=self.title,
                           # text="Activity",
                           category_orders=category_orders,
                           color_discrete_map=color_from_activity_category()
@@ -230,5 +232,5 @@ class GanttChartActivityGenerator(GanttChartGenerator):
 
         fig.update_layout(xaxis_title="Date",
                           yaxis_title="Activity",
-                          showlegend=True)
+                          showlegend=not self.hide_legend)
         return fig
