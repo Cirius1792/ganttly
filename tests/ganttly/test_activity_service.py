@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from ganttly.activity_service import ActivityService
 from ganttly.dto import ActivityTypeEnum
 
-from tests.activity_dto_helper import build_activity_dto
+from tests.ganttly.activity_dto_helper import build_activity_dto
 
 
 class TestActivityService(unittest.TestCase):

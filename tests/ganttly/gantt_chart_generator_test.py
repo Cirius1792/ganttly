@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from ganttly.dto import ActivityTypeEnum
 from ganttly.gantt_chart_generator import GanttChartActivityGenerator
-from tests.activity_dto_helper import build_activity_dto
+from tests.ganttly.activity_dto_helper import build_activity_dto
 
 
 class TestGanttChartGenerator(TestCase):
